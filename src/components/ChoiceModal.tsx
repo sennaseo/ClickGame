@@ -1,4 +1,5 @@
 "use client";
+
 import { useState, useEffect, useRef } from "react";
 import type { Stat, Scenario } from "@/data/stats";
 
@@ -10,67 +11,93 @@ interface Props {
 
 export default function ChoiceModal({ opts, scene, onPick }: Props) {
   const [cd, setCd] = useState(10);
+  const [armed, setArmed] = useState(false);
   const stableOpts = useRef(opts);
   const flavors = useRef(opts.map((o) => o.desc));
+
+  useEffect(() => {
+    setArmed(false);
+    const armTimer = setTimeout(() => setArmed(true), 450);
+    return () => clearTimeout(armTimer);
+  }, [opts, scene]);
 
   useEffect(() => {
     if (cd <= 0) {
       onPick(stableOpts.current[Math.floor(Math.random() * 2)].id);
       return;
     }
-    const t = setTimeout(() => setCd((c) => c - 1), 1000);
-    return () => clearTimeout(t);
+
+    const timer = setTimeout(() => setCd((prev) => prev - 1), 1000);
+    return () => clearTimeout(timer);
   }, [cd, onPick]);
 
   return (
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/85 backdrop-blur-xl" />
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="event-modal-title" aria-describedby="event-modal-desc">
+      <div className="absolute inset-0 bg-black/88 backdrop-blur-2xl" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(129,140,248,0.28),_transparent_35%)]" />
+
       <div
-        className="relative w-full max-w-[440px] mx-4"
-        style={{ animation: "modalIn .3s ease" }}
+        className="relative w-full max-w-[860px] overflow-hidden rounded-[32px] border border-white/10 bg-[#09090be8] shadow-[0_30px_100px_rgba(0,0,0,0.55)]"
+        style={{ animation: "modalIn .28s ease" }}
       >
-        {/* Header */}
-        <div className="text-center rounded-t-[20px] border border-b-0 border-white/[0.07]"
-          style={{ background: "rgba(20,18,28,.98)", padding: "28px 24px 20px" }}>
-          <div className="text-[11px] font-semibold text-[#818cf8] mb-2">
-            ⚡ 이벤트 · <span className={cd <= 3 ? "text-red-400" : ""}>⏱ {cd}초</span>
+        <div className="border-b border-white/10 bg-[linear-gradient(180deg,rgba(129,140,248,0.18),rgba(255,255,255,0.02))] px-6 py-6 sm:px-8">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[#c7d2fe]">Special Event</div>
+              <div id="event-modal-title" className="mt-2 text-2xl font-black tracking-[-0.04em] text-white sm:text-[2rem]">{scene.t}</div>
+              <div id="event-modal-desc" className="mt-2 text-sm text-[#d4d4d8]">{scene.s}</div>
+            </div>
+            <div className={`rounded-full border px-4 py-2 text-sm font-extrabold ${cd <= 3 ? "border-red-400/40 bg-red-500/15 text-red-200" : "border-white/10 bg-white/6 text-white"}`}>
+              ⏱ {cd}초
+            </div>
           </div>
-          <div className="text-lg font-extrabold">{scene.t}</div>
-          <div className="text-[13px] text-[#71717a] mt-1">{scene.s}</div>
+          <div className="mt-4 rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm text-[#a1a1aa]">
+            {armed
+              ? "이제 안전하게 선택할 수 있습니다."
+              : "손 떼는 중... 연속 클릭 오작동 방지 잠금이 잠깐 적용됩니다."}
+          </div>
         </div>
 
-        {/* Choices */}
-        <div className="grid grid-cols-2 relative">
-          {stableOpts.current.map((o, idx) => (
+        <div className="grid gap-4 p-4 sm:grid-cols-2 sm:p-6">
+          {stableOpts.current.map((option, index) => (
             <button
-              key={o.id}
-              onClick={() => onPick(o.id)}
-              className="flex flex-col items-center justify-center border border-white/[0.07] cursor-pointer transition-colors duration-200"
-              style={{
-                padding: "28px 16px 24px",
-                background: "rgba(12,10,22,.98)",
-                fontFamily: "inherit",
-                color: "#fafafa",
-                borderRadius: idx === 0 ? "0 0 0 20px" : "0 0 20px 0",
+              key={option.id}
+              onClick={() => {
+                if (!armed) return;
+                onPick(option.id);
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = `${o.c}10`)}
-              onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(12,10,22,.98)")}
+              className="event-option group"
+              disabled={!armed}
+              type="button"
             >
-              <span className="text-[44px] mb-3">{o.em}</span>
-              <span className="text-[15px] font-bold mb-1">{o.name}</span>
-              <span className="text-[11px] text-[#71717a]">{flavors.current[idx]}</span>
-              <div
-                className="mt-3 px-4 py-1 rounded-2xl text-[13px] font-bold text-white"
-                style={{ background: o.c }}
-              >
-                선택
+              <div className="event-option__glow" style={{ background: `${option.c}30` }} />
+              <div className="relative z-[1]">
+                <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/8 text-3xl shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                  {option.em}
+                </div>
+                <div className="mt-5 flex items-center justify-between gap-3">
+                  <div className="text-left">
+                    <div className="text-xl font-black tracking-[-0.04em] text-white">{option.name}</div>
+                    <div className="mt-2 text-sm leading-6 text-[#d4d4d8]">{flavors.current[index]}</div>
+                  </div>
+                  <div
+                    className="rounded-full px-3 py-1 text-xs font-extrabold text-white"
+                    style={{ background: option.c }}
+                  >
+                    선택 시 +{cd <= 3 ? "긴박감" : "오염도"}
+                  </div>
+                </div>
+                <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/30 px-4 py-2 text-sm font-bold text-white transition-transform duration-200 group-hover:translate-x-1">
+                  <span>{armed ? "이 루트 탄다" : "잠깐만"}</span>
+                  <span>{armed ? "→" : "..."}</span>
+                </div>
               </div>
             </button>
           ))}
-          {/* VS badge */}
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-[#18181b] border-2 border-white/[0.08] flex items-center justify-center text-[10px] font-black text-[#818cf8]">
-            VS
-          </div>
+        </div>
+
+        <div className="pointer-events-none absolute left-1/2 top-1/2 hidden h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/12 bg-[#09090b] text-xs font-black tracking-[0.28em] text-[#a5b4fc] sm:flex">
+          VS
         </div>
       </div>
     </div>
