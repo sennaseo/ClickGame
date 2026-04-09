@@ -84,7 +84,7 @@ begin
 end;
 $$;
 
--- 상점 구매: 스탯 올리고 포인트 차감
+-- 상점 구매: 스탯 올리고 포인트 차감 (음수 방지)
 create or replace function game_buy_stat(stat_id text, amt int, cost int)
 returns void language plpgsql security definer as $$
 begin
@@ -92,7 +92,7 @@ begin
   set stats = jsonb_set(
         stats,
         array[stat_id],
-        to_jsonb(least((stats->>stat_id)::int + amt, 100))
+        to_jsonb(greatest(least((stats->>stat_id)::int + amt, 100), 0))
       ),
       bank = greatest(bank - cost, 0),
       updated_at = now()
@@ -100,7 +100,7 @@ begin
 end;
 $$;
 
--- 이벤트 선택: 스탯만 올림
+-- 이벤트 선택: 스탯 변경 (음수 방지)
 create or replace function game_event_stat(stat_id text, amt int)
 returns void language plpgsql security definer as $$
 begin
@@ -108,7 +108,7 @@ begin
   set stats = jsonb_set(
         stats,
         array[stat_id],
-        to_jsonb(least((stats->>stat_id)::int + amt, 100))
+        to_jsonb(greatest(least((stats->>stat_id)::int + amt, 100), 0))
       ),
       updated_at = now()
   where id = 1;

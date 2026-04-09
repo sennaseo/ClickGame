@@ -197,7 +197,6 @@
 
   .click-stage__reward {
     box-shadow: 0 0 0 1px rgba(129, 140, 248, 0.08), 0 0 28px rgba(129, 140, 248, 0.12);
-    animation: breathe 2s infinite;
   }
 
   .mobile-tabs {
@@ -536,7 +535,6 @@
     transform: translateX(-50%);
     filter: blur(50px);
     opacity: 0.72;
-    animation: pulseGlow 1.8s ease-in-out infinite;
   }
 
   .toy-clicker__glow {
@@ -575,7 +573,6 @@
     font-weight: 900;
     color: #fff;
     box-shadow: 0 0 24px rgba(255, 255, 255, 0.06);
-    animation: breathe 1.4s infinite;
   }
 
   .toy-clicker__score {
@@ -629,7 +626,6 @@
     background: rgba(9, 9, 11, 0.42);
     padding: 0.8rem 1rem;
     box-shadow: 0 0 0 1px rgba(129, 140, 248, 0.08), 0 0 30px rgba(129, 140, 248, 0.12);
-    animation: breathe 2s infinite;
   }
 
   .toy-hero__subinfo {
@@ -818,6 +814,24 @@
   to {
     opacity: 1;
     transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes evolutionBurst {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) rotate(-10deg);
+    filter: brightness(3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15) rotate(3deg);
+    filter: brightness(1.5);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+    filter: brightness(1);
   }
 }
 

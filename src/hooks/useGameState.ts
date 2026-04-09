@@ -78,7 +78,7 @@ export function useGameState() {
     // Optimistic update
     setGameState((prev) => ({
       ...prev,
-      stats: { ...prev.stats, [statId]: Math.min((prev.stats[statId] || 0) + amount, 100) },
+      stats: { ...prev.stats, [statId]: Math.max(0, Math.min((prev.stats[statId] || 0) + amount, 100)) },
       bank: prev.bank - cost,
     }));
 
@@ -90,7 +90,7 @@ export function useGameState() {
     // Optimistic update
     setGameState((prev) => ({
       ...prev,
-      stats: { ...prev.stats, [statId]: Math.min((prev.stats[statId] || 0) + amount, 100) },
+      stats: { ...prev.stats, [statId]: Math.max(0, Math.min((prev.stats[statId] || 0) + amount, 100)) },
     }));
 
     await supabase.rpc("game_event_stat", { stat_id: statId, amt: amount });
