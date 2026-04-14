@@ -190,6 +190,90 @@ export const INITIAL_STATS: StatsMap = {
   tsundere: 0, chuuni: 0, simp: 0, delusion: 0,
 };
 
+// ─── 스탯 조합 캐릭터 시스템 ───
+
+/** 부 성향 표시용 데코 이모지 레이어
+ * [0] = 30%+ (secondary deco)
+ * [1] = 60%+ (planned: intense)
+ * [2] = reserved
+ */
+export const STAT_DECO_LAYERS: Record<string, string[]> = {
+  anger:    ["💢", "🔥", "😤"],
+  peterpan: ["✨", "🧚", "🫧"],
+  avoidant: ["🎧", "💨", "👻"],
+  menhera:  ["🩹", "🌧️", "💙"],
+  tsundere: ["🌹", "💢", "😳"],
+  chuuni:   ["⚡", "🌑", "🗡️"],
+  simp:     ["🐶", "💕", "☕"],
+  delusion: ["🌀", "💫", "💰"],
+};
+
+/** 희귀도 한국어 표기 */
+export const RARITY_KO: Record<string, string> = {
+  legendary: "전설",
+  epic: "희귀",
+  rare: "특별",
+};
+
+/** 조합 캐릭터 이름 테이블
+ * 키 포맷: `${primary}` 또는 `${primary}+${secondaries를 알파벳 오름차순.join("+")}`
+ * specialTitle이 있는 조합은 이 테이블 대신 specialTitle.title 사용
+ */
+export const COMBINATION_NAMES: Record<string, string> = {
+  "anger":                   "현실 분노기계",
+  "anger+peterpan":          "화난 요정",
+  "anger+avoidant":          "튀려는 분노왕",
+  "anger+menhera":           "폭발 직전 멘헤라",
+  "anger+tsundere":          "화나지만 챙겨줌",
+  "anger+chuuni":            "봉인된 분노",
+  "anger+simp":              "화나지만 예스맨",
+  "anger+delusion":          "퇴사 상상 폭주",
+  "peterpan":                "영원한 신입",
+  "peterpan+anger":          "화난 피터팬",
+  "peterpan+avoidant":       "도망치는 요정",
+  "peterpan+menhera":        "상처받은 아이",
+  "peterpan+chuuni":         "봉인된 요정왕",
+  "peterpan+delusion":       "드림보이/걸",
+  "avoidant":                "읽씹 전문가",
+  "avoidant+anger":          "화나서 튀는 중",
+  "avoidant+chuuni":         "어둠의 도망자",
+  "avoidant+menhera":        "읽씹하고 화장실 울기",
+  "avoidant+delusion":       "도망치며 사업 구상",
+  "menhera":                 "화장실 복귀 프로",
+  "menhera+anger":           "폭발 직전의 멘헤라",
+  "menhera+tsundere":        "츤데레 울보",
+  "menhera+simp":            "감성 셔틀",
+  "menhera+chuuni":          "봉인된 슬픔",
+  "tsundere":                "관심 없다는 야근러",
+  "tsundere+anger":          "화나지만 챙겨주는 유형",
+  "tsundere+menhera":        "울면서 챙겨줌",
+  "tsundere+simp":           "쯔쿤데레 심부름꾼",
+  "tsundere+delusion":       "관심 없다면서 사업 구상",
+  "chuuni":                  "봉인된 사직서",
+  "chuuni+avoidant":         "어둠의 도망자",
+  "chuuni+delusion":         "어둠의 사업가",
+  "chuuni+peterpan":         "봉인된 요정왕",
+  "chuuni+simp":             "어둠의 심부름꾼",
+  "simp":                    "팀 커피 셔틀",
+  "simp+anger":              "화나지만 예스맨",
+  "simp+delusion":           "사업가 강아지",
+  "simp+menhera":            "감성 셔틀",
+  "simp+peterpan":           "영원한 신입 강아지",
+  "delusion":                "30억 상상 중",
+  "delusion+anger":          "퇴사 상상 폭주",
+  "delusion+avoidant":       "도망치며 사업 구상",
+  "delusion+chuuni":         "어둠의 사업가",
+  "delusion+peterpan":       "드림보이/걸",
+};
+
+/** 조합 이름 반환 — specialTitle이 있으면 호출 불필요 */
+export function getCombinationName(primary: string, secondaries: string[]): string {
+  const key = secondaries.length > 0
+    ? `${primary}+${secondaries.join("+")}` // getActiveCombination에서 이미 알파벳 정렬됨
+    : primary;
+  return COMBINATION_NAMES[key] ?? `${primary} 복합형`;
+}
+
 export const pick2 = (): [Stat, Stat] => {
   const shuffled = [...STATS].sort(() => Math.random() - 0.5);
   return [shuffled[0], shuffled[1]];

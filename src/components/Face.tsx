@@ -2,17 +2,18 @@
 
 import { motion, useAnimationControls } from "motion/react";
 import { useEffect, useRef } from "react";
-import { STATS, EYES, MOUTHS, type StatsMap } from "@/data/stats";
-import { getStatStage } from "@/data/evolution";
+import { STATS, EYES, MOUTHS, STAT_DECO_LAYERS, TITLE_COLORS, type StatsMap } from "@/data/stats";
+import { getStatStage, type ActiveCombination } from "@/data/evolution";
 
 interface FaceProps {
   lv: number;
   dominant: string;
   shaking: boolean;
   stats?: StatsMap;
+  activeCombination?: ActiveCombination | null;
 }
 
-export default function Face({ lv, dominant, shaking, stats }: FaceProps) {
+export default function Face({ lv, dominant, shaking, stats, activeCombination }: FaceProps) {
   const stat = STATS.find((item) => item.id === dominant) || STATS[0];
   const paint = lv >= 5;
   const clampedLv = Math.min(lv, 5);
@@ -22,6 +23,21 @@ export default function Face({ lv, dominant, shaking, stats }: FaceProps) {
   // 진화 단계 데코 이모지
   const domPercent = stats?.[dominant] || 0;
   const evoStage = getStatStage(dominant, domPercent);
+
+  // 부 성향 데코 (최대 2개 × 이모지 1개)
+  const secondaryDecos = activeCombination
+    ? activeCombination.secondaries
+        .slice(0, 2)
+        .map(id => STAT_DECO_LAYERS[id]?.[0] ?? "")
+        .filter(Boolean)
+    : [];
+
+  // evolution 데코 + 부 성향 데코 합산 (각도 공식이 자동 재분배)
+  const allDecos = evoStage
+    ? [...evoStage.deco, ...secondaryDecos]
+    : secondaryDecos;
+
+  const specialTitle = activeCombination?.specialTitle ?? null;
 
   // squash/stretch on click
   useEffect(() => {
@@ -159,15 +175,33 @@ export default function Face({ lv, dominant, shaking, stats }: FaceProps) {
       {/* invisible spacer to maintain layout */}
       <div style={{ width: 220, height: 220 }} />
 
-      {/* 진화 데코 이모지 — 캐릭터 주변에 떠다님 */}
-      {evoStage && evoStage.deco.map((emoji, i) => {
-        const angle = (360 / evoStage.deco.length) * i;
+      {/* 특수 칭호 뱃지 — Face 최상단 */}
+      {specialTitle && (
+        <motion.div
+          className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full px-3 py-1 rounded-full text-[10px] font-black tracking-wider whitespace-nowrap max-w-[200px] truncate z-10"
+          style={{
+            background: `${TITLE_COLORS[specialTitle.rarity]}18`,
+            border: `1px solid ${TITLE_COLORS[specialTitle.rarity]}50`,
+            color: TITLE_COLORS[specialTitle.rarity],
+            boxShadow: `0 0 16px ${TITLE_COLORS[specialTitle.rarity]}30`,
+          }}
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 400, damping: 20 }}
+        >
+          ✨ {specialTitle.title}
+        </motion.div>
+      )}
+
+      {/* 데코 이모지 — evolution 데코 + 부 성향 데코 합산, 캐릭터 주변에 떠다님 */}
+      {allDecos.map((emoji, i) => {
+        const angle = (360 / allDecos.length) * i;
         const radius = 130 + (i % 2) * 15;
         const x = Math.cos((angle * Math.PI) / 180) * radius;
         const y = Math.sin((angle * Math.PI) / 180) * radius;
         return (
           <motion.span
-            key={`evo-${evoStage.level}-${i}`}
+            key={`deco-${emoji}-${i}`}
             className="absolute pointer-events-none text-xl md:text-2xl"
             style={{
               left: "50%",

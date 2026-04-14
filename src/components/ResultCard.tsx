@@ -1,7 +1,7 @@
 "use client";
 import { useRef } from "react";
-import { STATS, EYES, MOUTHS, getBestTitle, TITLE_COLORS, corruptionLevel, type StatsMap } from "@/data/stats";
-import { getStatStage, getUnlockedForms, TOTAL_FORMS } from "@/data/evolution";
+import { STATS, EYES, MOUTHS, getBestTitle, TITLE_COLORS, RARITY_KO, getCombinationName, corruptionLevel, type StatsMap } from "@/data/stats";
+import { getStatStage, getUnlockedForms, TOTAL_FORMS, type ActiveCombination } from "@/data/evolution";
 import Radar from "./Radar";
 
 interface Props {
@@ -9,10 +9,11 @@ interface Props {
   totalClicks: number;
   enhanceAttempts: number;
   enhanceSuccesses: number;
+  activeCombination?: ActiveCombination | null;
   onClose: () => void;
 }
 
-export default function ResultCard({ stats, totalClicks, enhanceAttempts, enhanceSuccesses, onClose }: Props) {
+export default function ResultCard({ stats, totalClicks, enhanceAttempts, enhanceSuccesses, activeCombination, onClose }: Props) {
   const cardRef = useRef<HTMLDivElement>(null);
   const total = Object.values(stats).reduce((a, b) => a + b, 0);
   const sorted = Object.entries(stats).sort((a, b) => b[1] - a[1]);
@@ -32,16 +33,23 @@ export default function ResultCard({ stats, totalClicks, enhanceAttempts, enhanc
     : total >= 100 ? "슬슬 본색이 드러나고 있습니다"
     : "아직은 정상적인 사회인입니다";
 
+  const combinationName = activeCombination?.specialTitle?.title
+    ?? (activeCombination ? getCombinationName(activeCombination.primary, activeCombination.secondaries) : null);
+
   const handleShare = async () => {
     const evoText = evoStage ? `진화: ${evoStage.deco[0]} ${evoStage.name} (Lv.${evoStage.level})` : "";
+    const specialTitleText = activeCombination?.specialTitle
+      ? `✨ [${RARITY_KO[activeCombination.specialTitle.rarity]}] ${activeCombination.specialTitle.title}`
+      : "";
     const text = [
       `🏢 나의 직장인 성격 카드`,
       ``,
       `${EYES[clampedLv][0]} ${MOUTHS[clampedLv]} ${EYES[clampedLv][1]}`,
       ``,
+      combinationName ? `나의 유형: ${combinationName}` : "",
+      specialTitleText,
       `주 성향: ${top.em} ${top.name} ${sorted[0][1]}%`,
       `부 성향: ${sub.em} ${sub.name} ${sorted[1]?.[1] ?? 0}%`,
-      title ? `칭호: ${title.name}` : "",
       evoText,
       `📖 도감 수집: ${unlocked.length}/${TOTAL_FORMS}`,
       `강화 ${enhanceAttempts}회 (성공률 ${successRate}%)`,
@@ -78,8 +86,8 @@ export default function ResultCard({ stats, totalClicks, enhanceAttempts, enhanc
           />
 
           <div className="p-6 text-center">
-            {/* Title badge */}
-            {title && (
+            {/* TITLES 뱃지 — specialTitle 없을 때만 표시 */}
+            {title && !activeCombination?.specialTitle && (
               <div
                 className="inline-block px-4 py-1 rounded-full text-xs font-bold mb-4"
                 style={{
@@ -122,6 +130,25 @@ export default function ResultCard({ stats, totalClicks, enhanceAttempts, enhanc
                 <span className="text-xs font-bold ml-1" style={{ color: top.c }}>
                   {evoStage.name}
                 </span>
+              </div>
+            )}
+
+            {/* 조합 캐릭터 이름 */}
+            {combinationName && (
+              <div className="text-base font-black mb-1" style={{ color: "#fafafa" }}>
+                {combinationName}
+              </div>
+            )}
+            {activeCombination?.specialTitle && (
+              <div
+                className="inline-block px-3 py-0.5 rounded-full text-[10px] font-bold mb-2"
+                style={{
+                  background: `${TITLE_COLORS[activeCombination.specialTitle.rarity]}15`,
+                  border: `1px solid ${TITLE_COLORS[activeCombination.specialTitle.rarity]}40`,
+                  color: TITLE_COLORS[activeCombination.specialTitle.rarity],
+                }}
+              >
+                ✨ [{RARITY_KO[activeCombination.specialTitle.rarity]}] {activeCombination.specialTitle.title}
               </div>
             )}
 

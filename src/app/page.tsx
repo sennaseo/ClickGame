@@ -1,11 +1,11 @@
 "use client";
-import { useState, useRef, useCallback, useMemo } from "react";
+import { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import {
   STATS, ENHANCE_ITEMS, SCENARIOS, INITIAL_STATS,
   corruptionLevel, getBestTitle, TITLE_COLORS,
   type StatsMap, type Scenario,
 } from "@/data/stats";
-import { checkEvolution, getUnlockedForms, TOTAL_FORMS, getStatStage, getNextStage } from "@/data/evolution";
+import { checkEvolution, getUnlockedForms, TOTAL_FORMS, getStatStage, getNextStage, getActiveCombination, type ActiveCombination } from "@/data/evolution";
 import type { EvolutionStage } from "@/data/evolution";
 import { useGameState } from "@/hooks/useGameState";
 import { useUser } from "@/hooks/useUser";
@@ -38,12 +38,20 @@ export default function Home() {
   const [shopOpen, setShopOpen] = useState(false);
   const [enhanceAttempts, setEnhanceAttempts] = useState(0);
   const [enhanceSuccesses, setEnhanceSuccesses] = useState(0);
+  const [pendingSpecialTitle, setPendingSpecialTitle] = useState<ActiveCombination["specialTitle"]>(null);
   const bid = useRef(0);
   const sincePick = useRef(0);
+  const prevSpecialTitleRef = useRef<string | null>(null);
 
   const total = useMemo(() => Object.values(stats).reduce((a, b) => a + b, 0), [stats]);
   const lv = corruptionLevel(total);
   const sorted = useMemo(() => Object.entries(stats).sort((a, b) => b[1] - a[1]), [stats]);
+  // 개별 스탯 값 의존 — stats 객체 ref는 매 렌더마다 새로 생성되므로 사용 불가
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const activeCombination = useMemo(() => getActiveCombination(stats),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [stats.anger, stats.peterpan, stats.avoidant, stats.menhera, stats.tsundere, stats.chuuni, stats.simp, stats.delusion]
+  );
   const dom = sorted[0];
   const domStat = STATS.find(s => s.id === dom[0]) || STATS[0];
   const title = useMemo(() => getBestTitle(stats), [stats]);
@@ -51,6 +59,15 @@ export default function Home() {
   const isModalOpen = !!scenario || !!enhanceResult || showResult || showCollection || !!evolutionAlert;
   const unlockedForms = useMemo(() => getUnlockedForms(stats), [stats]);
   const domEvo = useMemo(() => getStatStage(dom[0], dom[1]), [dom]);
+
+  // specialTitle이 새로 달성됐을 때만 토스트 발동
+  useEffect(() => {
+    const currentTitle = activeCombination?.specialTitle?.title ?? null;
+    if (currentTitle && currentTitle !== prevSpecialTitleRef.current) {
+      setPendingSpecialTitle(activeCombination!.specialTitle);
+    }
+    prevSpecialTitleRef.current = currentTitle;
+  }, [activeCombination]);
 
   // ─── Click ───
   const doClick = useCallback((e: React.MouseEvent) => {
@@ -154,6 +171,13 @@ export default function Home() {
       <div className="fixed pointer-events-none transition-all duration-[2000ms]" style={{ bottom: "-30%", left: "-20%", width: 500, height: 500, borderRadius: "50%", background: `radial-gradient(circle,${domStat.c}05,transparent 70%)` }} />
 
       {toast && <Toast msg={toast} onDone={() => setToast(null)} />}
+      {/* specialTitle 토스트 — EvolutionAlert와 겹치지 않게 */}
+      {!evolutionAlert && pendingSpecialTitle && (
+        <Toast
+          msg={`✨ [${pendingSpecialTitle.rarity === "legendary" ? "전설" : pendingSpecialTitle.rarity === "epic" ? "희귀" : "특별"}] ${pendingSpecialTitle.title}`}
+          onDone={() => setPendingSpecialTitle(null)}
+        />
+      )}
       {bursts.map(b => <Burst key={b.id} {...b} />)}
       {scenario && <ChoiceModal scenario={scenario} onPick={doPick} />}
       {enhanceResult && (
@@ -191,6 +215,7 @@ export default function Home() {
           totalClicks={totalClicks}
           enhanceAttempts={enhanceAttempts}
           enhanceSuccesses={enhanceSuccesses}
+          activeCombination={activeCombination}
           onClose={() => setShowResult(false)}
         />
       )}
@@ -226,9 +251,10 @@ export default function Home() {
               WebkitTapHighlightColor: "transparent",
             }}
           >
-            <Face lv={Math.min(lv, 5)} dominant={dom[0]} shaking={shaking} stats={stats} />
+            <Face lv={Math.min(lv, 5)} dominant={dom[0]} shaking={shaking} stats={stats} activeCombination={activeCombination} />
 
-            {title && (
+            {/* specialTitle이 없을 때만 기존 TITLES 뱃지 표시 */}
+            {title && !activeCombination?.specialTitle && (
               <div className="mt-3 inline-block px-3 py-1 rounded-full text-[11px] font-bold" style={{
                 background: `${TITLE_COLORS[title.rarity]}12`,
                 border: `1px solid ${TITLE_COLORS[title.rarity]}30`,

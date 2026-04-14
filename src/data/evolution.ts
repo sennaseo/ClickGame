@@ -161,3 +161,56 @@ export function getUnlockedForms(stats: StatsMap): { statId: string; stage: Evol
 
 /** 전체 폼 수 */
 export const TOTAL_FORMS = EVOLUTIONS.reduce((sum, e) => sum + e.stages.length, 0); // 40
+
+// ─── 스탯 조합 캐릭터 시스템 ───
+
+export interface ActiveCombination {
+  primary: string;
+  secondaries: string[]; // 알파벳 오름차순 정렬
+  specialTitle: { title: string; rarity: "legendary" | "epic" | "rare" } | null;
+}
+
+const COMBINATION_THRESHOLD = 30;
+
+/** 30% 이상인 스탯들로 조합 캐릭터 구성 */
+export function getActiveCombination(stats: Record<string, number>): ActiveCombination | null {
+  const active = Object.entries(stats)
+    .filter(([, val]) => val >= COMBINATION_THRESHOLD)
+    .sort(([, a], [, b]) => b - a);
+
+  if (active.length === 0) return null;
+
+  const [primaryId] = active[0];
+  // secondaries는 항상 알파벳 오름차순 — COMBINATION_NAMES 키 포맷과 일치
+  const secondaryIds = active.slice(1).map(([id]) => id).sort();
+
+  return {
+    primary: primaryId,
+    secondaries: secondaryIds,
+    specialTitle: checkSpecialTitle([primaryId, ...secondaryIds]),
+  };
+}
+
+/** 특수 칭호 조건 확인 */
+export function checkSpecialTitle(
+  activeIds: string[]
+): { title: string; rarity: "legendary" | "epic" | "rare" } | null {
+  const set = new Set(activeIds);
+  if (set.size >= 8)
+    return { title: "사회 부적응 종합세트", rarity: "legendary" };
+  if (set.has("anger") && set.has("avoidant") && set.has("menhera") && set.has("tsundere"))
+    return { title: "직장인 4중주", rarity: "legendary" };
+  if (set.has("anger") && set.has("menhera") && set.has("simp"))
+    return { title: "감성 폭발 직장인", rarity: "epic" };
+  if (set.has("anger") && set.has("tsundere") && set.has("peterpan"))
+    return { title: "화나지만 책임은 네 탓", rarity: "epic" };
+  if (set.has("simp") && set.has("peterpan") && set.has("delusion"))
+    return { title: "꿈많은 심부름꾼", rarity: "epic" };
+  if (set.has("tsundere") && set.has("menhera"))
+    return { title: "울면서 챙겨주는 유형", rarity: "epic" };
+  if (set.has("peterpan") && set.has("delusion"))
+    return { title: "영원한 드림보이/걸", rarity: "rare" };
+  if (set.has("chuuni") && set.has("avoidant"))
+    return { title: "어둠의 도망자", rarity: "rare" };
+  return null;
+}
