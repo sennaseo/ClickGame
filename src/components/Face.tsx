@@ -178,6 +178,9 @@ export default function Face({ lv, dominant, shaking, stats, activeCombination }
       {/* 특수 칭호 뱃지 — Face 최상단 */}
       {specialTitle && (
         <motion.div
+          key={specialTitle.title}
+          role="status"
+          aria-live="polite"
           className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full px-3 py-1 rounded-full text-[10px] font-black tracking-wider whitespace-nowrap max-w-[200px] truncate z-10"
           style={{
             background: `${TITLE_COLORS[specialTitle.rarity]}18`,

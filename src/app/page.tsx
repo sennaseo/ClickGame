@@ -2,7 +2,7 @@
 import { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import {
   STATS, ENHANCE_ITEMS, SCENARIOS, INITIAL_STATS,
-  corruptionLevel, getBestTitle, TITLE_COLORS,
+  corruptionLevel, getBestTitle, TITLE_COLORS, RARITY_KO,
   type StatsMap, type Scenario,
 } from "@/data/stats";
 import { checkEvolution, getUnlockedForms, TOTAL_FORMS, getStatStage, getNextStage, getActiveCombination, type ActiveCombination } from "@/data/evolution";
@@ -174,7 +174,7 @@ export default function Home() {
       {/* specialTitle 토스트 — EvolutionAlert와 겹치지 않게 */}
       {!evolutionAlert && pendingSpecialTitle && (
         <Toast
-          msg={`✨ [${pendingSpecialTitle.rarity === "legendary" ? "전설" : pendingSpecialTitle.rarity === "epic" ? "희귀" : "특별"}] ${pendingSpecialTitle.title}`}
+          msg={`✨ [${RARITY_KO[pendingSpecialTitle.rarity]}] ${pendingSpecialTitle.title}`}
           onDone={() => setPendingSpecialTitle(null)}
         />
       )}
@@ -203,7 +203,15 @@ export default function Home() {
         <EvolutionAlert
           statId={evolutionAlert.statId}
           stage={evolutionAlert.stage}
-          onDone={() => setEvolutionAlert(null)}
+          onDone={() => {
+            setEvolutionAlert(null);
+            // evo 대기 중 stats가 30% 밑으로 내려갔을 수 있으므로 재검증
+            setPendingSpecialTitle(prev => {
+              if (!prev) return null;
+              const current = getActiveCombination(stats);
+              return current?.specialTitle?.title === prev.title ? prev : null;
+            });
+          }}
         />
       )}
       {showCollection && (

@@ -46,7 +46,7 @@ export default function ResultCard({ stats, totalClicks, enhanceAttempts, enhanc
       ``,
       `${EYES[clampedLv][0]} ${MOUTHS[clampedLv]} ${EYES[clampedLv][1]}`,
       ``,
-      combinationName ? `나의 유형: ${combinationName}` : "",
+      combinationName && !activeCombination?.specialTitle ? `나의 유형: ${combinationName}` : "",
       specialTitleText,
       `주 성향: ${top.em} ${top.name} ${sorted[0][1]}%`,
       `부 성향: ${sub.em} ${sub.name} ${sorted[1]?.[1] ?? 0}%`,
@@ -133,8 +133,8 @@ export default function ResultCard({ stats, totalClicks, enhanceAttempts, enhanc
               </div>
             )}
 
-            {/* 조합 캐릭터 이름 */}
-            {combinationName && (
+            {/* 조합 캐릭터 이름 — specialTitle 있을 때는 badge가 title 포함하므로 생략 */}
+            {combinationName && !activeCombination?.specialTitle && (
               <div className="text-base font-black mb-1" style={{ color: "#fafafa" }}>
                 {combinationName}
               </div>
