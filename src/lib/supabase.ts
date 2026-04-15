@@ -7,7 +7,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error(
     [
       "Missing Supabase environment variables.",
-      "Create /Users/sennaseo/portfolio/ClickGame/.env.local and set:",
+      "Create .env.local in the project root and set:",
       "NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT.supabase.co",
       "NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY",
     ].join("\n")
