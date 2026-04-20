@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "generate-characters": "tsx scripts/generate-characters.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.0",
@@ -21,6 +22,7 @@
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
     "tailwindcss": "^4.1.0",
+    "tsx": "4.21.0",
     "typescript": "^5.8.0"
   }
 }
